@@ -393,7 +393,7 @@ class AdminSidebarMenu
                     ['icon' => 'fa fas fa-arrow-circle-down', 'id' => 'tour_step6']
                 )->order(25);
             }
-             $menu->dropdown(
+            $menu->dropdown(
                     'Vehicle Sell',
                     function ($sub) use ($common_settings) {
                       
@@ -419,7 +419,7 @@ class AdminSidebarMenu
                         
                     },
                     ['icon' => 'fa fas fa-arrow-circle-down', 'id' => 'tour_step6']
-                )->order(25);
+            )->order(25);
             //Sell dropdown
             if ($is_admin || auth()->user()->hasAnyPermission(['sell.view', 'sell.create', 'direct_sell.access', 'view_own_sell_only', 'view_commission_agent_sell', 'access_shipping', 'access_own_shipping', 'access_commission_agent_shipping', 'access_sell_return', 'direct_sell.view', 'direct_sell.update', 'access_own_sell_return'])) {
                 $menu->dropdown(

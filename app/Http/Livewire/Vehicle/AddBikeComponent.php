@@ -14,7 +14,8 @@ use App\DisplacementEngineCc;
 
 class AddBikeComponent extends Component
 {
-    public $product_category, $vehicle_manufacture_id, $body_type_id, $number_of_gears, $vehicle_model_id, $fuel_type, $model_origin_id, $chassis_code_id, $displacement_engine_cc_id;
+    public $product_category, $vehicle_manufacture_id, $body_type_id, $number_of_gears, $vehicle_model_id, $fuel_type, $model_origin_id, $chassis_code_id, 
+    $displacement_engine_cc_id, $pro_name;
     public $manufacture_name, $manufacture_category, $manufacture_country_id, $manufacture_image;
     public $model_name,
         $model_category,
@@ -52,8 +53,6 @@ class AddBikeComponent extends Component
     ];
     public function updated($property_name)
     {
-
-
         if ($property_name == 'vehicle_model_id') {
             if ($this->vehicle_manufacture_id == '') {
                 $this->dispatchBrowserEvent('error', ['msg' => 'Please Select Vehicle Manufacture First']);
@@ -85,7 +84,9 @@ class AddBikeComponent extends Component
     public function store()
     {
         $this->validate();
+       // dd($this);
         VehicleProduct::create([
+            'pro_name' => $this->pro_name,
             'product_category' => 'Bike',
             'vehicle_manufacture_id' => $this->vehicle_manufacture_id,
             'body_type_id' => $this->body_type_id,

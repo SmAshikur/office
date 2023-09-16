@@ -9,6 +9,7 @@ class VehicleProduct extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'pro_name',
         'product_category',
         'vehicle_manufacture_id',
         'body_type_id',

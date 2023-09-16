@@ -28,6 +28,9 @@
             </div>
             <div class="panel-body">
                 <form wire:submit.prevent="store" enctype="multipart/form-data">
+                    <input type="text" value="{{ $header_manufacture_name }}-{{ $header_model_name }}
+                    ({{ $header_chassis_name }},
+                    {{ $header_engine_name }} {{ $header_engine_name != '' ? 'cc' : '' }}" name="pro_name">
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
                             <div class="form-group">

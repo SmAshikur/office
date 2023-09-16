@@ -39,7 +39,8 @@ class BikeListComponent extends Component
                 ->paginate(10),
             'manufactures' => VehicleManufacture::where('category', 'LIKE', '%Bike%')->get(),
             'body_types' => BodyType::where('category', 'LIKE', '%Bike%')->get(),
-            'vehicle_models' => VehicleModel::where('category', 'LIKE', '%Bike%')->when($this->vehicle_manufacture_id, function ($query) {
+            'vehicle_models' => VehicleModel::where('category', 'LIKE', '%Bike%')
+            ->when($this->vehicle_manufacture_id, function ($query) {
                 $query->where('vehicle_manufacture_id', $this->vehicle_manufacture_id);
             })->get(),
             'vehicle_model_search' => $this->vehicle_manufacture_id_search
@@ -48,7 +49,8 @@ class BikeListComponent extends Component
                 ->get()
                 : collect([]),
             'model_origins' => ModelOrigin::all(),
-            'chassis_codes' => ChassisCode::where('category', 'LIKE', '%Bike%')->when($this->vehicle_manufacture_id, function ($query) {
+            'chassis_codes' => ChassisCode::where('category', 'LIKE', '%Bike%')
+            ->when($this->vehicle_manufacture_id, function ($query) {
                 $query->where('vehicle_manufacture_id', $this->vehicle_manufacture_id);
             })->get(),
             'displacement_engine_ccs' => DisplacementEngineCc::all(),

@@ -4,9 +4,16 @@
 @section('content')
 <section>
   <div class="container-fluid" style="">
+  
     <div class="row">
-      <form action="{{url('vehicle/sell')}}" method="post">@csrf
+      <form action=" @if(!isset($data->sell_id)){{url('vehicle/sell')}} @else {{url('vehicle/sell/'.$data->sell_id)}} @endif" 
+      method="post" id="myForm">@csrf
+     @if(isset($data->sell_id))
+        @method('put')
+     @endif
         <div class="col-md-8" style="">
+        <input type="hidden" value="{{$data->id}}" name="purchase_id">
+        <input type="hidden" value="{{$data->type}}" name="purchase_type">
           <div class="row" style="background-color: #fff; padding:20px;margin:20px">
             <h4>Customer Information</h4>
             <div>
@@ -97,7 +104,7 @@
                 </div>
                 <div class="col-md-3 ">
                   <label>Total of Other Cost</label>
-                  <input type="number" readonly class="form-control" name="other_cost" id="total_of_other_cost">
+                  <input type="number" readonly class="form-control" name="other_cost" id="total_of_other_cost" value="0">
                 </div>
               </div>
             </div>
@@ -113,14 +120,22 @@
             </div>
             <div class="col-md-3 ">
               <label>Price of Service & Warranty</label>
-              <input type="text" readonly class="form-control" name="service_price" id="service_warranty_id">
+              <input type="text" readonly class="form-control" name="service_price" id="service_warranty_id" value="0">
             </div>
           </div>
         </div>
         <div class="col-md-4" style="">
           <div class="row" style="background-color: #fff; padding:20px;margin:20px">
             <div style="display: flex; justify-content:end">
-              <span class="btn btn-primary"> Status:Book</span>
+              <span class="btn btn-primary"> Status:
+                @if(isset($data->sell))
+                @if($data->sell->is_sell== 0)
+                Booked
+                @else
+                Sold
+                @endif
+                @endif
+              </span>
             </div>
             <div class="form-group">
               <label for="" class="form-label">Sale Date</label>
@@ -139,14 +154,14 @@
               </select>
             </div>
             <div class="form-group">
-              <input type="text" readonly id="less_part_Service" class="form-control">
+              <input type="text" readonly id="less_part_Service" class="form-control" value="0">
             </div>
           </div>
           <div class="row" style="background-color: #fff; padding:20px;margin:20px">
 
             <div class="col-md-6" style="margin-bottom: 5px;">Vehicle Sell price</div>
             <div class="col-md-6" style="margin-bottom: 5px;">
-              <input type="text" class="form-control" readonly id="dis_sell_price2" value="{{$data->sale_price}}" name="sale_price">
+              <input type="text" class="form-control" readonly id="dis_sell_price2" value="{{$data->sale_price}}" name="discounted_price">
             </div>
 
             <div class="col-md-6" style="margin-bottom: 5px;">Total of Other Cost</div>
@@ -192,13 +207,19 @@
             <div class="col-md-4" style="margin-bottom: 10px;"> <input type="checkbox">&nbsp send sms</div>
             <div class="col-md-4" style="margin-bottom: 10px;"> <input type="checkbox">&nbsp send email</div>
             <div class="col-md-4" style="margin-bottom: 10px;">remarks</div>
-            <button class="col-md-12 btn btn-success" style="margin-bottom: 5px;" type="submit"> Proceed to Booking</button>
-            <button class="col-md-4 btn btn-primary" style="margin-bottom: 5px;"> Print</button>
-            <button class="col-md-4 btn btn-warning" style="margin-bottom: 5px;"> Edit</button>
-            <button class="col-md-4 btn btn-danger" style="margin-bottom: 5px;"> Cancel</button>
+            @if(!isset($data->sell_id))
+            <button class="col-md-12 btn btn-success confirmSubmit" style="margin-bottom: 5px;" type="button"> Proceed to Booking</button>
+            @else
+            <button class="col-md-12 btn btn-success confirmSubmit" style="margin-bottom: 5px;" type="button" 
+            > Proceed to Sale</button>
+            @endif
+            <button class="col-md-4 btn btn-primary" style="margin-bottom: 5px;" > Print</button>
+            <button class="col-md-4 btn btn-warning" style="margin-bottom: 5px;" > Edit</button>
+            <button class="col-md-4 btn btn-danger" style="margin-bottom: 5px;" > Cancel</button>
+            @if(isset($data->sell_id))
             <button class="col-md-12 btn btn-success"> Recive payment</button>
+            @endif
           </div>
-
         </div>
       </form>
     </div>
@@ -220,6 +241,11 @@
 @endif
 <script type="text/javascript">
   $(document).ready(function() {
+     $(document).on('click', '.confirmSubmit', function(e) {
+      if (confirm("Are you sure you want to submit this form?")) {
+                $("#myForm").submit();
+            }
+    })
     $('#status').change(function() {
       if ($(this).val() == 'final') {
         $('#payment_rows_div').removeClass('hide');
@@ -256,6 +282,8 @@
     $(document).on('click', '#add_other_cost', function(e) {
       $other_cost = $('#other_cost').val()
       $cost_name = $('#cost_name').val()
+      alert($other_cost)
+      if($other_cost.length > 0){
       $('#tr_add_other_cost').append('\
                     <tr>\
                       <td><input type="text" class="form-control" readonly value="' + $cost_name + '"></td>\
@@ -263,8 +291,14 @@
                       <td ><i class="fas fa-trash remove_other_cost" style="margin-left: 20px;"></i></td>\
                     </tr>\
        ')
+      
+
+     
       other_cost_sum()
       sub_total()
+      $('#other_cost').val('')
+      $('#cost_name').val('')
+       }
     })
 
     function sub_total() {
@@ -277,7 +311,7 @@
       var sub_total = parseFloat(dis_sell_price2 + total_of_other_cost2 + service_warranty_id2 + sell_vat)
       $('#sell_sub_total').val(sub_total)
       var less_part_Service = parseFloat($('#less_part_Service').val())
-     // alert(sub_total)
+      //alert(less_part_Service)
       $('#total_to_pay').val(sub_total-less_part_Service)
     }
 
@@ -357,6 +391,9 @@
     if ($('.payment_types_dropdown').length) {
       $('.payment_types_dropdown').change();
     }
+    $(document).on('change','#customer_id',function (e) {
+      
+    })
 
   });
 </script>

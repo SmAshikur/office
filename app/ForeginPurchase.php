@@ -71,4 +71,8 @@ class ForeginPurchase extends Model
     {
         return $this->belongsTo(ExteriorColor::class, 'interior_color_id', 'id');
     }
+    public function sell()
+    {
+        return $this->belongsTo(VehicleSell::class, 'sell_id', 'id');
+    }
 }

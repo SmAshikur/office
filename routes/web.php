@@ -278,6 +278,7 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
 
     Route::resource('vehicle/sell', VehicleSellController::class)->except(['show']);
     Route::get('vehicle/book', [VehicleSellController::class,'new_book']);
+    Route::Post('manufacture_model', [VehicleSellController::class,'manufacture_model']);
     Route::get('vehicle/book/{id}', [VehicleSellController::class,'new_book_add']);
 
     Route::get('/import-sales', [ImportSalesController::class, 'index']);

@@ -18,5 +18,6 @@ class VerifyCsrfToken extends BaseVerifier
         '/api/ecom/customers',
         '/api/ecom/orders',
         '/webhook/*'
+        
     ];
 }

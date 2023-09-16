@@ -264,17 +264,14 @@
     <div wire:ignore.self class="modal fade" id="update-purchase-modal" role="dialog" aria-labelledby="model-8"
         aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
-
             <!-- Modal Content -->
             <div class="modal-content">
-
                 <!-- Modal Header -->
                 <div class="modal-header">
                     <h3 class="modal-title" id="model-8">Update Local Purchase<button type="button"
                             class="close pull-right" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">×</span>
-                        </button></h3>
-
+                            <span aria-hidden="true"> × </span>
+                    </button></h3>
                 </div>
                 <!-- /modal header -->
 
