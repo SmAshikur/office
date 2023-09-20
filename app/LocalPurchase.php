@@ -65,7 +65,7 @@ class LocalPurchase extends Model
     public function vehicle()
     {
         return $this->belongsTo(VehicleProduct::class, 'vehicle_id', 'id')
-        ->with(['manufacture','vehicle_model','body_type','chassis_code','displacement_engine']);
+        ->with(['manufacture','model_origin','body_type','chassis_code','displacement_engine']);
     }
     public function exterior_color()
     {

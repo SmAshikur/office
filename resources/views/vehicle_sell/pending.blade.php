@@ -5,7 +5,7 @@
 <section>
   <div class="container">
     <div>
-      <h3>Sales List</h3>
+      <h3>Pending Delivery List</h3>
     </div>
     <form action="{{url('vehicle/sell')}}" method="get">
       <div class="row m-10" style="margin-top: 20px;">

@@ -205,8 +205,8 @@
                                     <td>{{ $startingSerial++ }}</td>
                                     <td>{{ $item->purchase_date }}</td>
                                     <td>
-                                        {{ $item->vehicle->manufacture->name ?? '' }} -
-                                        {{ $item->vehicle->model_origin->model ?? '' }}({{ $item->vehicle->chassis_code->name ?? '' }},
+                                        {{ $item->vehicle->manufacture->name ?? '' }} - {{ $item->vehicle->model_origin->model ?? '' }}
+                                        ({{ $item->vehicle->chassis_code->name ?? '' }},
                                         {{ $item->vehicle->displacement_engine->cc ?? '' }}cc,
                                         {{ $item->vehicle->transmission ?? '' }},
                                         {{ $item->vehicle->drive_system ?? '' }},

@@ -5,7 +5,7 @@
 <section>
   <div class="container">
     <div>
-      <h3>Sales List</h3>
+      <h3>Vehicle Deliverd List</h3>
     </div>
     <form action="{{url('vehicle/sell')}}" method="get">
       <div class="row m-10" style="margin-top: 20px;">
@@ -17,7 +17,6 @@
           <label for="">Sales Status</label>
           <select name="" class="form-control" id="">
             <option value="">Sales satus</option>
-
           </select>
         </div>
         <div class="col-md-3 p-2">
@@ -25,7 +24,7 @@
           <select name="manufacture_id" class="form-control" id="Manufacturer">
             <option value="">Select Manufacturer</option>
             @foreach(\App\VehicleManufacture::get() as $manufacturer)
-            <option value="{{$manufacturer->id}}" @if($manufacturer->id == $manufacture_id) selected @endif>{{$manufacturer->name}}</option>
+              <option value="{{$manufacturer->id}}" @if($manufacturer->id == $manufacture_id) selected @endif>{{$manufacturer->name}}</option>
             @endforeach
           </select>
         </div>
@@ -99,7 +98,7 @@
   var sell_table = $('#sell_table').DataTable({
     processing: true,
     serverSide: true,
-    ajax: '/vehicle/sell',
+    ajax: '/vehicle/delivered',
     columnDefs: [{
       targets: 9,
       orderable: false,

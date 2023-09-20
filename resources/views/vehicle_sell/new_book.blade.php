@@ -5,11 +5,11 @@
 
 <section>
   <div class="container">
-   <!-- <h1>manu  = {{$manufacture_id}}</h1>
+    <!-- <h1>manu  = {{$manufacture_id}}</h1>
    <h1>model  = {{$model_id}}</h1>
    <h1>color  = {{$color_id}}</h1>
-   <h1>year  = {{$year}}</h1>
-   <h1>search  = {{$search}}</h1> -->
+   <h1>year  = {{$year}}</h1> -->
+    
 
     <form action="{{url('vehicle/book')}}" method="get">
       <div class="row m-10" style="margin-top: 50px;">
@@ -71,15 +71,15 @@
         </div>
         <div class="col-md-3">
           <div style="display: flex; flex-direction: row;">
-            <input type="search" class="form-control" style="flex: 1;" name="search" value="{{$search}}">
-            <button style="margin-left: 5px;" class="btn btn-primary"><i class="fas fa-search"></i> Search</button>
+            <!-- <input type="search" class="form-control" style="flex: 1;" name="search" value=""> -->
+            <button style="margin-left: 5px;" class="btn btn-block"> Filter </button>
           </div>
         </div>
       </div>
     </form>
 
 
-    <div class="row" style="margin: 0px 20px 0px 30px;">
+    <!-- <div class="row" style="margin: 0px 20px 0px 30px;">
       @foreach($data as $lp)
       @if(isset($lp->sell) && $lp->sell->is_sell != 1 || !isset($lp->sell->is_sell) )
 
@@ -147,7 +147,14 @@
       </div>
       @endif
       @endforeach
-      {{ $data->links() }}
+       
+    </div> -->
+     <div style="background-color: #f4f4f4; padding:30px 20px; margin-top:10px; margin-bottom: 30px;">
+      <div class="table-responsive">
+        <table class="table " id="purchase_table" style="width: 100%;">
+
+        </table>
+      </div>
     </div>
   </div>
 </section>
@@ -156,6 +163,28 @@
 
 @section('javascript')
   <script type="text/javascript">
+  var purchase_table = $('#purchase_table').DataTable({
+    processing: true,
+    serverSide: true,
+    ajax: '/vehicle/book',
+    columnDefs: [{
+      targets: 0,
+      orderable: false,
+      searchable: true,
+    }, ],
+    columns: [
+
+      {
+        data: 'type',
+        name: 'type'
+      },
+    
+    ],
+    lengthMenu: [
+      [10, 25, 50, -1],
+      [10, 25, 50, "All"]
+    ],
+  });
   $(document).ready(function() {
     $(document).on('change', '#Manufacturer', function(e) {
       var id = $(this).val()

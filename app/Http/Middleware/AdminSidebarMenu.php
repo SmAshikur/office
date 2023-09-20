@@ -400,21 +400,51 @@ class AdminSidebarMenu
                             $sub->url(
                                 action([\App\Http\Controllers\VehicleSellController::class, 'new_book']),
                                 'New Book',
+                                ['icon' => 'fa fas fa-plus-circle', 'active' => request()->segment(1) == 'purchases' && request()->segment(2) == null]
+                            );
+                        
+                            $sub->url(
+                                action([\App\Http\Controllers\VehicleSellController::class, 'index']),
+                                'Vehicle Sell List',
+                                ['icon' => 'fa fas fa-list', 'active' => request()->segment(1) == 'purchases' && request()->segment(2) == 'create']
+                            );
+                        
+                    },
+                    ['icon' => 'fa fas fa-arrow-circle-down', 'id' => 'tour_step6']
+            )->order(25);
+            $menu->dropdown(
+                    'Vehicle Delivery',
+                    function ($sub) use ($common_settings) {
+                      
+                            $sub->url(
+                                action([\App\Http\Controllers\VehicleSellController::class, 'pending']),
+                                'Pending List',
                                 ['icon' => 'fa fas fa-list', 'active' => request()->segment(1) == 'purchases' && request()->segment(2) == null]
                             );
                         
-                       
                             $sub->url(
-                                action([\App\Http\Controllers\VehicleSellController::class, 'index']),
-                                __('purchase.add_purchase'),
-                                ['icon' => 'fa fas fa-plus-circle', 'active' => request()->segment(1) == 'purchases' && request()->segment(2) == 'create']
+                                action([\App\Http\Controllers\VehicleSellController::class, 'delivered']),
+                                'Delivered List',
+                                ['icon' => 'fa fas fa-list', 'active' => request()->segment(1) == 'purchases' && request()->segment(2) == 'create']
                             );
+                        
+                    },
+                    ['icon' => 'fa fas fa-arrow-circle-down', 'id' => 'tour_step6']
+            )->order(25);
+            $menu->dropdown(
+                    'Bank Quotation',
+                    function ($sub) use ($common_settings) {
                       
+                            $sub->url(
+                                action([\App\Http\Controllers\BankQuatationController::class, 'create']),
+                                'Generate Qutation',
+                                ['icon' => 'fa fas fa-list', 'active' => request()->segment(1) == 'purchases' && request()->segment(2) == null]
+                            );
                         
                             $sub->url(
-                                action([\App\Http\Controllers\VehicleSellController::class, 'create']),
-                                __('lang_v1.list_purchase_return'),
-                                ['icon' => 'fa fas fa-undo', 'active' => request()->segment(1) == 'purchase-return']
+                                action([\App\Http\Controllers\BankQuatationController::class, 'index']),
+                                'Qutation List',
+                                ['icon' => 'fa fas fa-list', 'active' => request()->segment(1) == 'purchases' && request()->segment(2) == 'create']
                             );
                         
                     },

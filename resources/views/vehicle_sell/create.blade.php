@@ -1,12 +1,11 @@
 @extends('layouts.app')
 @section('title', __( 'lang_v1.all_sales'))
-
 @section('content')
 <section>
   <div class="container-fluid" style="">
-  
     <div class="row">
-      <form action=" @if(!isset($data->sell_id)){{url('vehicle/sell')}} @else {{url('vehicle/sell/'.$data->sell_id)}} @endif" 
+      <form action=" @if(!isset($data->sell_id))
+      {{url('vehicle/sell')}} @else {{url('vehicle/sell/'.$data->sell_id)}} @endif" 
       method="post" id="myForm">@csrf
      @if(isset($data->sell_id))
         @method('put')
@@ -15,7 +14,7 @@
         <input type="hidden" value="{{$data->id}}" name="purchase_id">
         <input type="hidden" value="{{$data->type}}" name="purchase_type">
           <div class="row" style="background-color: #fff; padding:20px;margin:20px">
-            <h4>Customer Information</h4>
+            <h4>Customer Information <span class="text-danger">*</span></h4>
             <div>
               <div class="input-group">
                 <span class="input-group-addon">
@@ -47,7 +46,7 @@
               {{$data->vehicle->transmission??''}},
               {{$data->vehicle->drive_system??''}},
               {{$data->vehicle->fuel_type??''}}
-              )-{{$data->registration_year}}
+              )-{{$data->year_of_manufacture}}
             </h4>
             <div>
               Vin/Chassis No: {{$data->vehicle->chassis_code->name??''}} &nbsp;
@@ -66,7 +65,7 @@
                 </div>
                 <div class="col-md-4">
                   <label for="" class="form-label">Discount</label>
-                  <input type="number" class="form-control" name="discount" id="sale_discount">
+                  <input type="number" class="form-control" name="discount" id="sale_discount" >
                 </div>
                 <div class="col-md-4">
                   <label for="" class="form-label">Sell Price</label>
@@ -126,32 +125,53 @@
         </div>
         <div class="col-md-4" style="">
           <div class="row" style="background-color: #fff; padding:20px;margin:20px">
-            <div style="display: flex; justify-content:end">
-              <span class="btn btn-primary"> Status:
-                @if(isset($data->sell))
-                @if($data->sell->is_sell== 0)
-                Booked
-                @else
-                Sold
-                @endif
-                @endif
-              </span>
+            <div style="display: flex; justify-content:space-between">
+              <div class="form-group">
+                <label for="" class="form-label">Invoice Number <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="invoice_number" required>
+                @error('invoice_number')
+                        <span class="text-danger">{{ $message }}</span>
+                  @enderror
+              </div>
+              <div>
+                <span class="btn btn-primary"> Status:
+                  @if(isset($data->sell))
+                  @if($data->sell->is_sell== 0)
+                  Booked
+                  @else
+                  Sold
+                  @endif
+                  @elseif(isset($data->pre_order_id))
+                  Pre-Booked
+                  @endif
+                </span>
+              </div>
             </div>
             <div class="form-group">
-              <label for="" class="form-label">Sale Date</label>
-              <input type="date" class="form-control" name="sale_date">
+              <label for="" class="form-label">Sale Date <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" name="sale_date" required>
+               @error('sale_date')
+                      <span class="text-danger">{{ $message }}</span>
+                @enderror
             </div>
             <div class="form-group">
-              <label for="" class="form-label">Booked/Sold By</label>
-              <select name="book" id="" class="form-control">
-                <option value="">--Select one--</option>
+              <label for="" class="form-label">Booked/Sold By <span class="text-danger">*</span></label>
+              <select name="book_by" id="" class="form-control" required>
+                <option value="">--Select one-- </option>
+                @foreach(\App\User::get() as $user)
+                  <option value="{{$user->id}}">{{$user->first_name.' '.$user->last_name }}</option>
+                @endforeach
               </select>
+                @error('book_by')
+                      <span class="text-danger">{{ $message }}</span>
+                @enderror
             </div>
             <div class="form-group">
               <label for="" class="form-label">Part Exchange</label>
               <select name="part_exchange" id="" class="form-control">
                 <option value="">--Select one--</option>
               </select>
+                 
             </div>
             <div class="form-group">
               <input type="text" readonly id="less_part_Service" class="form-control" value="0">
@@ -193,25 +213,29 @@
               <h5>Total to Pay</h5>
             </div>
             <div class="col-md-6" style="margin-bottom: 10px;">
-              <input type="text" class="form-control" name="total_to_pay" readonly id="total_to_pay">
+              <input type="text" class="form-control" name="total_to_pay" readonly id="total_to_pay" value="{{$data->sale_price}}">
             </div>
             <div class="col-md-12" style="margin-bottom: 10px;">
-              <label for="" class="form-label">Terms & Conditions</label>
-              <select name="" id="terms_id" class="form-control" name="terms">
-                <option value="">--Select one--</option>
-                @foreach(\App\Terms::get() as $cost)
-                  <option value="{{$cost->id}}">{{$cost->title}}</option>
+              <label for="" class="form-label">Terms & Conditions <span class="text-danger">*</span></label>
+              <select name="terms" id="terms" class="form-control" name="terms">
+                <option value="terms">--Select one--</option>
+                @foreach(\App\Terms::get() as $terms)
+                  <option value="{{$terms->id}}">{{$terms->title}}</option>
                 @endforeach
               </select>
+                @error('terms')
+                      <span class="text-danger">{{ $message }}</span>
+                @enderror
             </div>
             <div class="col-md-4" style="margin-bottom: 10px;"> <input type="checkbox">&nbsp send sms</div>
             <div class="col-md-4" style="margin-bottom: 10px;"> <input type="checkbox">&nbsp send email</div>
             <div class="col-md-4" style="margin-bottom: 10px;">remarks</div>
-            @if(!isset($data->sell_id))
-            <button class="col-md-12 btn btn-success confirmSubmit" style="margin-bottom: 5px;" type="button"> Proceed to Booking</button>
-            @else
+            @if(isset($data->sell_id) || isset($data->pre_order_id))
+            
             <button class="col-md-12 btn btn-success confirmSubmit" style="margin-bottom: 5px;" type="button" 
             > Proceed to Sale</button>
+            @else
+            <button class="col-md-12 btn btn-success confirmSubmit" style="margin-bottom: 5px;" type="button"> Proceed to Booking</button>
             @endif
             <button class="col-md-4 btn btn-primary" style="margin-bottom: 5px;" > Print</button>
             <button class="col-md-4 btn btn-warning" style="margin-bottom: 5px;" > Edit</button>
@@ -240,7 +264,8 @@
 <script src="{{ asset('js/restaurant.js?v=' . $asset_v) }}"></script>
 @endif
 <script type="text/javascript">
-  $(document).ready(function() {
+    $('#terms').val($('#terms option:eq(1)').val());
+    $(document).ready(function() {
      $(document).on('click', '.confirmSubmit', function(e) {
       if (confirm("Are you sure you want to submit this form?")) {
                 $("#myForm").submit();
@@ -282,18 +307,15 @@
     $(document).on('click', '#add_other_cost', function(e) {
       $other_cost = $('#other_cost').val()
       $cost_name = $('#cost_name').val()
-      alert($other_cost)
+     // alert($other_cost)
       if($other_cost.length > 0){
       $('#tr_add_other_cost').append('\
-                    <tr>\
-                      <td><input type="text" class="form-control" readonly value="' + $cost_name + '"></td>\
-                      <td><input type="text" class="form-control other_cost_val" value="' + $other_cost + '"></td>\
-                      <td ><i class="fas fa-trash remove_other_cost" style="margin-left: 20px;"></i></td>\
-                    </tr>\
+          <tr>\
+            <td><input type="text" class="form-control" readonly value="' + $cost_name + '"></td>\
+            <td><input type="text" class="form-control other_cost_val" value="' + $other_cost + '"></td>\
+            <td ><i class="fas fa-trash remove_other_cost" style="margin-left: 20px;"></i></td>\
+          </tr>\
        ')
-      
-
-     
       other_cost_sum()
       sub_total()
       $('#other_cost').val('')

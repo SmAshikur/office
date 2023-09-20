@@ -43,6 +43,7 @@ use App\Http\Controllers\InvoiceSchemeController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\AccountReportsController;
+use App\Http\Controllers\BankQuatationController;
 use App\Http\Controllers\ImportProductsController;
 use App\Http\Controllers\LedgerDiscountController;
 use App\Http\Controllers\PurchaseReturnController;
@@ -169,7 +170,7 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::get('/business/settings', [BusinessController::class, 'getBusinessSettings'])->name('business.getBusinessSettings');
     Route::get('/import/settings', [BusinessController::class, 'getImportSettings'])->name('import.getImportSettings');
     Route::post('/business/update', [BusinessController::class, 'postBusinessSettings'])->name('business.postBusinessSettings');
-   // Route::post('/business/update', [BusinessController::class, 'postBusinessSettings'])->name('business.postBusinessSettings');
+    // Route::post('/business/update', [BusinessController::class, 'postBusinessSettings'])->name('business.postBusinessSettings');
     Route::get('/user/profile', [UserController::class, 'getProfile'])->name('user.getProfile');
     Route::post('/user/update', [UserController::class, 'updateProfile'])->name('user.updateProfile');
     Route::post('/user/update-password', [UserController::class, 'updatePassword'])->name('user.updatePassword');
@@ -179,11 +180,11 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::resource('vehicle_location', VehicleLocationController::class);
     Route::resource('vehicle_service', VehicleServiceController::class);
     Route::resource('cost_type', CostTypeController::class);
-        //import setup
+    //import setup
     Route::resource('irc', IrcController::class);
     Route::resource('port', PortController::class);
     Route::resource('hscode', HscodeController::class);
-    
+
     Route::resource('payment-account', 'PaymentAccountController');
 
     Route::resource('tax-rates', TaxRateController::class);
@@ -204,6 +205,7 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::post('/contacts/import', [ContactController::class, 'postImportContacts']);
     Route::post('/contacts/check-contacts-id', [ContactController::class, 'checkContactId']);
     Route::get('/contacts/customers', [ContactController::class, 'getCustomers']);
+    Route::get('/vehicles/products', [VehicleController::class, 'getVehicles']);
     Route::resource('contacts', ContactController::class);
 
     Route::get('taxonomies-ajax-index-page', [TaxonomyController::class, 'getTaxonomyIndexPage']);
@@ -274,12 +276,20 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::get('/sells/draft-dt', [SellController::class, 'getDraftDatables']);
     Route::resource('sells', SellController::class)->except(['show']);
 
-       //--- vehicle sell --
+    //--- vehicle sell --
 
     Route::resource('vehicle/sell', VehicleSellController::class)->except(['show']);
-    Route::get('vehicle/book', [VehicleSellController::class,'new_book']);
-    Route::Post('manufacture_model', [VehicleSellController::class,'manufacture_model']);
-    Route::get('vehicle/book/{id}', [VehicleSellController::class,'new_book_add']);
+    Route::get('vehicle/book', [VehicleSellController::class, 'new_book']);
+    Route::get('vehicle/book2', [VehicleSellController::class, 'new_book2']);
+    Route::Post('manufacture_model', [VehicleSellController::class, 'manufacture_model']);
+    Route::get('vehicle/book/{id}', [VehicleSellController::class, 'new_book_add']);
+
+    //--- vehicle delivery --
+    Route::get('vehicle/delivered', [VehicleSellController::class, 'delivered']);
+    Route::get('vehicle/pending/delivery', [VehicleSellController::class, 'pending']);
+
+     //--- vehicle delivery --
+    Route::resource('bank/quatation', BankQuatationController::class)->except(['show']);
 
     Route::get('/import-sales', [ImportSalesController::class, 'index']);
     Route::post('/import-sales/preview', [ImportSalesController::class, 'preview']);

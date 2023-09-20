@@ -59,9 +59,10 @@ class ForeginPurchase extends Model
     {
         return $this->belongsTo(Contact::class, 'supplier', 'id');
     }
-    public function vehicle()
+      public function vehicle()
     {
-        return $this->belongsTo(VehicleProduct::class, 'vehicle_id', 'id');
+        return $this->belongsTo(VehicleProduct::class, 'vehicle_id', 'id')
+        ->with(['manufacture','model_origin','body_type','chassis_code','displacement_engine']);
     }
     public function exterior_color()
     {

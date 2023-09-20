@@ -341,7 +341,6 @@
   
 </script>
 <script>
-
     var vehicle_location_table = $('#vehicle_location_table').DataTable({
         processing: true,
         serverSide: true,

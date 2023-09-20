@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\BodyType;
+use App\Business;
 use App\CustomerGroup;
 use App\ForeginPurchase;
 use App\Http\Livewire\Vehicle\AddForeignPurchase;
@@ -18,6 +19,10 @@ use App\VehicleModel;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Validator;
+use Yajra\DataTables\Facades\DataTables;
+
+use function Termwind\render;
 
 class VehicleSellController extends Controller
 {
@@ -68,10 +73,7 @@ class VehicleSellController extends Controller
 
     public function new_book(Request $request)
     {
-        if ($request->has('search')) {
-            session()->put('search', $request->search);
-          
-        }
+
         if ($request->has('manufacture_id')) {
             session()->put('manufacture_id', $request->manufacture_id);
         }
@@ -87,41 +89,21 @@ class VehicleSellController extends Controller
             session()->put('color_id', $request->color_id);
         }
 
-            
-        $search = session()->get('search') ?? '';
+
+
         $manufacture_id = session()->get('manufacture_id') ?? '';
         $model_id = session()->get('model_id') ?? '';
         $year = session()->get('year') ?? '';
         $color_id = session()->get('color_id') ?? '';
-        // dd($year);
-        //dd($manufacture_id);
-        //dd($search);
+
         // Fetch data from LocalPurchase model
         $localPurchases = LocalPurchase::get();
         // Fetch data from ForeignPurchase model
         $foreignPurchases = ForeginPurchase::get();
         // Combine the collections
         $data = $localPurchases->concat($foreignPurchases);
-        //dd($data->vehicle);
-        if (isset($search)) {
-            // dd('ase');
-            // $search = $request->search;
-            // session()->put('search', $search);
-            // $test = session()->get('search');
-            //  $data = LocalPurchase::where('vehicle_type', 'like', '%' . $search . '%')->paginate(5);
-            $manufactures = VehicleManufacture::where('name', 'LIKE', '%'.$request->search.'%')->get();
-            $body_types =  BodyType::where('name', 'LIKE', '%'.$request->search.'%')->get();
-            $vehicle_models =  VehicleModel::where('name', 'LIKE', '%'.$request->search.'%')->get();
-            //dd($body_types);
-            //ser
-            $search = VehicleManufacture::where('name', 'LIKE', '%'.$request->search.'%')->select('id')->first();
-            dd($search);
-            $data = $data->filter(function ($item) use ($search) {
-                return stripos($item->vehicle_manufacture_id, $search) !== false;
-            });
-            //dd($data);
 
-        }
+
         if (isset($manufacture_id) && $manufacture_id != '') {
 
             //$manufacture_id = $request->manufacture_id;
@@ -147,30 +129,98 @@ class VehicleSellController extends Controller
                 return stripos($item->exterior_color_id, $color_id) !== false;
             });
         }
-        // Paginate the combined collection
-        $perPage = 4; // Number of items per page
-        $totalItems = $data->count();
-        $currentPage = request()->input('page', 1); // Get the current page from the request
-        if ($currentPage < 1) {
-            $currentPage = 1;
-        } elseif ($currentPage > ceil($totalItems / $perPage)) {
-            $currentPage = ceil($totalItems / $perPage);
-        }
-        $pagedData = $data->slice(($currentPage - 1) * $perPage, $perPage)->all();
-        $data = new LengthAwarePaginator(
-            $pagedData,
-            $data->count(),
-            $perPage,
-            $currentPage,
-            ['path' => Paginator::resolveCurrentPath()]
-        );
+        //dd($data);
+        if (request()->ajax()) {
+            $business_id = request()->session()->get('user.business_id');
 
-        //dd($search);
-        return view('vehicle_sell.new_book', compact('data', 'search', 'manufacture_id', 'model_id', 'color_id', 'year'));
+            return DataTables::of($data)
+                ->editColumn('type', function ($row) {
+                    $htmlContent = '';
+                    if(isset($row->sell) && $row->sell->is_sell != 1 || !isset($row->sell->is_sell)){
+                        $htmlContent = '.   <div style="background-color: #fff; padding:5px 20px; margin: 0px 20px;">
+                                <div>
+                                    <h4>
+                                        ' . ($row->vehicle->manufacture->name ?? '') . '-' . ($row->vehicle->model_origin->model ?? '') . '(
+                                        ' . ($row->vehicle->chassis_code->name ?? '') . ',
+                                        ' . ($row->vehicle->displacement_engine->cc ?? '') . 'cc , 
+                                        ' . ($row->vehicle->transmission ?? '') . ',
+                                        ' . ($row->vehicle->drive_system ?? '') . ',
+                                        ' . ($row->vehicle->fuel_type ?? '') . '
+                                        )-' . ($row->year_of_manufacture ?? '') . '
+                                        &nbsp;
+                        ';
+
+                        if (isset($row->sell) && $row->sell->is_book == 1) {
+                            $htmlContent .= '<i class="fas fa-check-circle text-success bg-success"></i>';
+                        }elseif (isset($row->pre_order_id)) {
+                            $htmlContent .= '<i class="fas fa-check-circle text-success bg-success"></i>';
+                        }
+                        $htmlContent .= '
+                                    </h4>
+                                </div>
+                                <table class="table">
+                                    <tr>
+                                        <td style="width: 20%">
+                                            Vin/Chassis No: ' . ($row->vehicle->chassis_code->name ?? '') . ' <br>
+                                            Engine No: NA <br>
+                                            Code:
+                                        </td>
+                                        <td style="width: 20%">
+                                            Condition: ' . ($row->vehicle_condition ?? '') . ' <br>
+                                            Reg. No: ' . ($row->registration_no ?? '') . '<br>
+                                            Color: ' . ($row->registration_no ?? '') . '
+                                        </td>
+                                        <td style="width: 20%">
+                                            Auction Grade: 5<br>
+                                            Mileage: 78000.00<br>
+                                            Location: Showroom
+                                        </td>
+                                        <td style="width: 20%">
+                                            Description:
+                                        </td>
+                                        <td></td>
+                                        <td style="width: 20% ;display:flex; flex-direction:row">
+                                            <form action="' . url('vehicle/book', ['id' => $row->id]) . '" method="get">
+                                                ' . csrf_field() . '
+                                                <input type="hidden" value="' . ($row->type ?? '') . '" name="type">';
+                                                if (isset($row->sell) && $row->sell->is_book == 1 || isset($row->pre_order_id)) {
+                                                    $htmlContent .= '<button type="submit" class="btn btn-sm">Proceed to Sell</button>';
+                                                } else{
+                                                    $htmlContent .= '<button type="submit" class="btn btn-sm">Book Now</button>';
+                                                }                                          
+                                            $htmlContent .= ' </form>
+                                            <div class="dropdown" style="margin-left:5px">
+                                                <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    More Actions
+                                                </button>
+                                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                                    <a class="dropdown-item" href="#">Action 1</a>
+                                                    <a class="dropdown-item" href="#">Action 2</a>
+                                                    <a class="dropdown-item" href="#">Action 3</a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        ';
+                    }
+                    return $htmlContent;
+                })
+
+                ->rawColumns(['type'])
+                ->make(true);
+        }
+        return view('vehicle_sell.new_book', compact('data', 'manufacture_id', 'model_id', 'color_id', 'year'));
     }
+
+
+
     public function new_book_add(Request $request, $id)
     {
         //dd($request->all());
+        $business_id = $business_id = request()->session()->get('user.business_id');
+        //dd($business_id);
         $type = $request->type;
         if ($type == 'local') {
             $data = LocalPurchase::with('vehicle')->find($id);
@@ -192,12 +242,257 @@ class VehicleSellController extends Controller
         }
         $customer_groups = CustomerGroup::forDropdown($business_id);
         // dd($data);
-        return view('vehicle_sell.create', compact('data', 'walk_in_customer', 'types', 'customer_groups'));
+        return view('vehicle_sell.create', compact('data', 'walk_in_customer', 'types', 'customer_groups','business_id'));
     }
 
     public function index()
     {
-        return view('vehicle_sell.index');
+        $manufacture_id = session()->get('manufacture_id') ?? '';
+        $model_id = session()->get('model_id') ?? '';
+        $year = session()->get('year') ?? '';
+        $color_id = session()->get('color_id') ?? '';
+
+          if (request()->ajax()) {
+            $business_id = request()->session()->get('user.business_id');
+
+            $unit = VehicleSell::get();
+
+            return Datatables::of($unit)
+                
+                ->addColumn('name',function ($row) {
+                     $htmlContent =  ''. ($row->vehicle->manufacture->name ?? '') . '-' . ($row->vehicle->model_origin->model ?? '') . '(
+                                        ' . ($row->vehicle->chassis_code->name ?? '') . ',
+                                        ' . ($row->vehicle->displacement_engine->cc ?? '') . 'cc , 
+                                        ' . ($row->vehicle->transmission ?? '') . ',
+                                        ' . ($row->vehicle->drive_system ?? '') . ',
+                                        ' . ($row->vehicle->fuel_type ?? '') . '
+                                        )-' . ($row->year_of_manufacture ?? '') . '
+                                        &nbsp;
+                        ';
+
+                     return $htmlContent;
+                })
+                ->addColumn(
+                    'action',
+                    '@can("terms.update")
+                    <span data-href="{{action(\'App\Http\Controllers\TermsController@destroy\', 
+                        [$id])}}"  data-id="{{ $id }}" class="btn btn-xs btn-success delete_terms_button" id="delete_terms_button">
+                        <i class="glyphicon glyphicon-eye-open"></i>
+                    </span>
+                    <span data-href="{{action(\'App\Http\Controllers\TermsController@edit\', 
+                    [$id])}}" data-id="{{ $id }}" class="btn btn-xs btn-primary edit_terms_button" id="edit_terms_button"><i class="glyphicon glyphicon-edit"></i> 
+                    </span>
+                    &nbsp;
+                    @endcan
+                    @can("terms.delete")
+                       
+                        <span data-href="{{action(\'App\Http\Controllers\TermsController@destroy\', 
+                        [$id])}}"  data-id="{{ $id }}" class="btn btn-xs btn-primary delete_terms_button" id="delete_terms_button">
+                        <i class="glyphicon glyphicon-file"></i> 
+                        </span>
+                         <span data-href="{{action(\'App\Http\Controllers\TermsController@destroy\', 
+                        [$id])}}"  data-id="{{ $id }}" class="btn btn-xs btn-danger delete_terms_button" id="delete_terms_button">
+                        <i class="glyphicon glyphicon-trash"></i> 
+                        </span>
+                        
+                    @endcan'
+                )
+                ->editColumn('customer_id',function ($row) {return $row->customer->name;})
+                ->editColumn('sold_by',function ($row) {
+                    if(isset($row->soldBy)){
+                        $dd = $row->soldBy->first_name.' '.$row->soldBy->last_name;
+                    }else{
+                         $dd = '';
+                    }
+                    return $dd;
+                })
+                 ->editColumn('is_sell',function ($row) {
+                    if($row->is_sell== 0){
+                        $row->is_book== 1?$dd="Booked":$dd="";
+                    }else{
+                         $dd = 'Sold';
+                    }
+                    return $dd;
+                })
+                 ->editColumn('is_delivered',function ($row) {
+                    if($row->is_delivered== 0){
+                        $dd=" ";
+                    }else{
+                         $dd = 'Delivered';
+                    }
+                    return $dd;
+                })
+               // ->removeColumn('id')
+                ->rawColumns(['action','name'])
+                ->make(true);
+        }
+        return view('vehicle_sell.index',compact('manufacture_id','model_id','year','color_id'));
+    }
+    public function pending()
+    {
+        $manufacture_id = session()->get('manufacture_id') ?? '';
+        $model_id = session()->get('model_id') ?? '';
+        $year = session()->get('year') ?? '';
+        $color_id = session()->get('color_id') ?? '';
+
+          if (request()->ajax()) {
+            $business_id = request()->session()->get('user.business_id');
+
+            $unit = VehicleSell::where('is_delivered',0)->get();
+
+            return Datatables::of($unit)
+                
+                ->addColumn('name',function ($row) {
+                     $htmlContent =  ''. ($row->vehicle->manufacture->name ?? '') . '-' . ($row->vehicle->model_origin->model ?? '') . '(
+                                        ' . ($row->vehicle->chassis_code->name ?? '') . ',
+                                        ' . ($row->vehicle->displacement_engine->cc ?? '') . 'cc , 
+                                        ' . ($row->vehicle->transmission ?? '') . ',
+                                        ' . ($row->vehicle->drive_system ?? '') . ',
+                                        ' . ($row->vehicle->fuel_type ?? '') . '
+                                        )-' . ($row->year_of_manufacture ?? '') . '
+                                        &nbsp;
+                        ';
+
+                     return $htmlContent;
+                })
+                ->addColumn(
+                    'action',
+                    '@can("terms.update")
+                    <span data-href="{{action(\'App\Http\Controllers\TermsController@destroy\', 
+                        [$id])}}"  data-id="{{ $id }}" class="btn btn-xs btn-success delete_terms_button" id="delete_terms_button">
+                        <i class="glyphicon glyphicon-eye-open"></i>
+                    </span>
+                    <span data-href="{{action(\'App\Http\Controllers\TermsController@edit\', 
+                    [$id])}}" data-id="{{ $id }}" class="btn btn-xs btn-primary edit_terms_button" id="edit_terms_button"><i class="glyphicon glyphicon-edit"></i> 
+                    </span>
+                    &nbsp;
+                    @endcan
+                    @can("terms.delete")
+                       
+                        <span data-href="{{action(\'App\Http\Controllers\TermsController@destroy\', 
+                        [$id])}}"  data-id="{{ $id }}" class="btn btn-xs btn-primary delete_terms_button" id="delete_terms_button">
+                        <i class="glyphicon glyphicon-file"></i> 
+                        </span>
+                         <span data-href="{{action(\'App\Http\Controllers\TermsController@destroy\', 
+                        [$id])}}"  data-id="{{ $id }}" class="btn btn-xs btn-danger delete_terms_button" id="delete_terms_button">
+                        <i class="glyphicon glyphicon-trash"></i> 
+                        </span>
+                        
+                    @endcan'
+                )
+                ->editColumn('customer_id',function ($row) {return $row->customer->name;})
+                ->editColumn('sold_by',function ($row) {
+                    if(isset($row->soldBy)){
+                        $dd = $row->soldBy->first_name.' '.$row->soldBy->last_name;
+                    }else{
+                         $dd = '';
+                    }
+                    return $dd;
+                })
+                 ->editColumn('is_sell',function ($row) {
+                    if($row->is_sell== 0){
+                        $row->is_book== 1?$dd="Booked":$dd="";
+                    }else{
+                         $dd = 'Sold';
+                    }
+                    return $dd;
+                })
+                 ->editColumn('is_delivered',function ($row) {
+                    if($row->is_delivered== 0){
+                        $dd=" ";
+                    }else{
+                         $dd = 'Delivered';
+                    }
+                    return $dd;
+                })
+               // ->removeColumn('id')
+                ->rawColumns(['action','name'])
+                ->make(true);
+        }
+        return view('vehicle_sell.pending',compact('manufacture_id','model_id','year','color_id'));
+    }
+    public function delivered()
+    {
+        $manufacture_id = session()->get('manufacture_id') ?? '';
+        $model_id = session()->get('model_id') ?? '';
+        $year = session()->get('year') ?? '';
+        $color_id = session()->get('color_id') ?? '';
+
+          if (request()->ajax()) {
+            $business_id = request()->session()->get('user.business_id');
+
+            $unit = VehicleSell::where('is_delivered',1)->get();
+
+            return Datatables::of($unit)
+                
+                ->addColumn('name',function ($row) {
+                     $htmlContent =  ''. ($row->vehicle->manufacture->name ?? '') . '-' . ($row->vehicle->model_origin->model ?? '') . '(
+                                        ' . ($row->vehicle->chassis_code->name ?? '') . ',
+                                        ' . ($row->vehicle->displacement_engine->cc ?? '') . 'cc , 
+                                        ' . ($row->vehicle->transmission ?? '') . ',
+                                        ' . ($row->vehicle->drive_system ?? '') . ',
+                                        ' . ($row->vehicle->fuel_type ?? '') . '
+                                        )-' . ($row->year_of_manufacture ?? '') . '
+                                        &nbsp;
+                        ';
+
+                     return $htmlContent;
+                })
+                ->addColumn(
+                    'action',
+                    '@can("terms.update")
+                    <span data-href="{{action(\'App\Http\Controllers\TermsController@destroy\', 
+                        [$id])}}"  data-id="{{ $id }}" class="btn btn-xs btn-success delete_terms_button" id="delete_terms_button">
+                        <i class="glyphicon glyphicon-eye-open"></i>
+                    </span>
+                    <span data-href="{{action(\'App\Http\Controllers\TermsController@edit\', 
+                    [$id])}}" data-id="{{ $id }}" class="btn btn-xs btn-primary edit_terms_button" id="edit_terms_button"><i class="glyphicon glyphicon-edit"></i> 
+                    </span>
+                    &nbsp;
+                    @endcan
+                    @can("terms.delete")
+                       
+                        <span data-href="{{action(\'App\Http\Controllers\TermsController@destroy\', 
+                        [$id])}}"  data-id="{{ $id }}" class="btn btn-xs btn-primary delete_terms_button" id="delete_terms_button">
+                        <i class="glyphicon glyphicon-file"></i> 
+                        </span>
+                         <span data-href="{{action(\'App\Http\Controllers\TermsController@destroy\', 
+                        [$id])}}"  data-id="{{ $id }}" class="btn btn-xs btn-danger delete_terms_button" id="delete_terms_button">
+                        <i class="glyphicon glyphicon-trash"></i> 
+                        </span>
+                        
+                    @endcan'
+                )
+                ->editColumn('customer_id',function ($row) {return $row->customer->name;})
+                ->editColumn('sold_by',function ($row) {
+                    if(isset($row->soldBy)){
+                        $dd = $row->soldBy->first_name.' '.$row->soldBy->last_name;
+                    }else{
+                         $dd = '';
+                    }
+                    return $dd;
+                })
+                 ->editColumn('is_sell',function ($row) {
+                    if($row->is_sell== 0){
+                        $row->is_book== 1?$dd="Booked":$dd="";
+                    }else{
+                         $dd = 'Sold';
+                    }
+                    return $dd;
+                })
+                 ->editColumn('is_delivered',function ($row) {
+                    if($row->is_delivered== 0){
+                        $dd=" ";
+                    }else{
+                         $dd = 'Delivered';
+                    }
+                    return $dd;
+                })
+               // ->removeColumn('id')
+                ->rawColumns(['action','name'])
+                ->make(true);
+        }
+        return view('vehicle_sell.delivered',compact('manufacture_id','model_id','year','color_id'));
     }
 
     /**
@@ -218,6 +513,20 @@ class VehicleSellController extends Controller
      */
     public function store(Request $request)
     {
+          $validationRules = [
+                'sale_date' => 'required|date',
+                'contact_id' => 'required|integer',
+                'invoice_number' => 'required|string',
+                'book_by' => 'required|string',
+                'terms' =>'required'
+                // Add more rules for other fields
+            ];
+          $validator = Validator::make($request->all(), $validationRules);
+
+            // Check if validation fails
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
         // dd($request->all());
         $id = $request->purchase_id;
         if ($request->purchase_type == 'local') {
